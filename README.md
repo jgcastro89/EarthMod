@@ -1,7 +1,7 @@
 # EarthMod
 Visualization tool for geophysical data (gravity, magnetics, etc) and any 3D dataset where contourmaps, and heat maps need to be produced.
 The tool can take input files with 3 columns (x,y,z) in text format or csv.
-
+To start using the dashboard type "python EarthMod_gui.py" into a terminal window.
 
 This tool requres the instalation of 
   pyqtgraph
