@@ -1,5 +1,5 @@
 import pandas as pd
-from pyqtgraph import QtGui, QtCore
+from pyqtgraph import QtGui
 
 from pandas_tableview_model import PandasModel
 from contour_map import contour_plot, Surface_plot, Volume_Rendering, Surface_Mesh
@@ -211,10 +211,9 @@ class Logic(QtGui.QMainWindow):
         """
 
         items = (
-            "YlGnBu_r", "ocean", "viridis", "gist_earth", "plasma", "inferno", "magma", "Purples_r", "Blues_r",
-            "Greens_r",
-            "PuRd_r", "RdPu_r", "YlGn_r",
-            "BuPu_r", "terrain", "seismic", "RdBu_r", "jet", "spectral")
+            "YlGnBu_r", "Purples_r", "Blues_r", "Greens_r", "PuRd_r", "RdPu_r", "YlGn_r", "BuPu_r", "RdBu_r",
+            "ocean", "gist_earth", "terrain", "seismic", "colorMap", "spectral",
+            "viridis", "plasma", "inferno", "magma")
         item, ok = QtGui.QInputDialog.getItem(self, "Select a Colormap Option", "Colormaps", items, 0, False)
 
         self.Contour_Map.build_2D_grid(self.pandas_dataframe[0], self.pandas_dataframe[1], self.pandas_dataframe[2],

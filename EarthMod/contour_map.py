@@ -15,6 +15,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.colors import LightSource, Normalize
 import matplotlib.tri as mtri
+import matplotlib
 
 
 class contour_plot(QtGui.QDialog):
@@ -39,7 +40,7 @@ class contour_plot(QtGui.QDialog):
 
         pg.setConfigOption('background', '#f8f8ff')
         pg.setConfigOption('foreground', 'k')
-        self.jet = None
+        self.colorMap = None
         self.jet_color_map()
         self.heat_img = pg.ImageView()
 
@@ -130,10 +131,14 @@ class contour_plot(QtGui.QDialog):
 
     def ordinary_kriging(self, x, y, z, xDim, yDim):
 
+        items = ("linear", "power", "gaussian", "spherical", "exponential", "hole-effect")
+
+        item, ok = QtGui.QInputDialog.getItem(self, "Kriging", "Variogram", items, 0, False)
+
         data = np.vstack((x, y))
         data = np.vstack((data, z)).T
 
-        OK = OrdinaryKriging(data[:, 0], data[:, 1], data[:, 2], variogram_function='spherical', verbose=False,
+        OK = OrdinaryKriging(data[:, 0], data[:, 1], data[:, 2], variogram_function=str(item), verbose=False,
                              enable_plotting=False)
 
         gridx = np.linspace(np.min(x), np.max(x), xDim)
@@ -141,18 +146,26 @@ class contour_plot(QtGui.QDialog):
 
         self.Z, ss = OK.execute('grid', gridx, gridy)
 
+        #OK.display_variogram_model()
+
     def universal_kriging(self, x, y, z, xDim, yDim):
+
+        items = ("linear", "power", "gaussian", "spherical", "exponential")
+
+        item, ok = QtGui.QInputDialog.getItem(self, "Kriging", "Variogram", items, 0, False)
 
         data = np.vstack((x, y))
         data = np.vstack((data, z)).T
 
-        UK = UniversalKriging(data[:, 0], data[:, 1], data[:, 2], variogram_model='linear',
+        UK = UniversalKriging(data[:, 0], data[:, 1], data[:, 2], variogram_model=str(item),
                               drift_terms=['regional_linear'])
 
         gridx = np.linspace(np.min(x), np.max(x), xDim)
         gridy = np.linspace(np.min(y), np.max(y), yDim)
 
         self.Z, ss = UK.execute('grid', gridx, gridy)
+
+        #UK.display_variogram_model()
 
     def _convex_hull(self, x, y, z, xDim, yDim):
 
@@ -245,72 +258,34 @@ class contour_plot(QtGui.QDialog):
 
     def heat_plot(self, Z):
 
-        # self.roi = pg.LineSegmentROI([[0, 50], [100, 50]], pen='r')
-
-        self.heat_img.setImage(Z.T, xvals=np.linspace(0., 100., Z.shape[0]))
-
-        # self.heat_img.addItem(self.roi)
+        self.heat_img.setImage(Z.T, xvals=np.linspace(0., 32., Z.shape[0]))
 
         self.heat_img.view.invertX(False)
         self.heat_img.view.invertY(False)
-        self.heat_img.setColorMap(self.jet)
+        self.heat_img.setColorMap(self.colorMap)
 
         north_arrow = pg.ArrowItem(angle=90, tipAngle=45, baseAngle=5, headLen=20, tailWidth=8, tailLen=8, pen='r')
         north_arrow.setPos(15, 0)
         self.heat_img.addItem(north_arrow)
 
-        # self.cross_section = pg.GraphicsWindow()
-        # self.slice_plot = self.cross_section.addPlot()
-
-        def update_cross_section():
-            slice = self.roi.getArrayRegion(self.vox_model, self.geoMap.imageItem, axes=(0, 1))
-            topo_slice = self.roi.getArrayRegion(self.topo, self.geoMap.imageItem, axes=(0, 1))
-            bedrock_slice = self.roi.getArrayRegion(self.bedrock, self.geoMap.imageItem, axes=(0, 1))
-
-            top = pg.PlotCurveItem(topo_slice)
-            bottom = pg.PlotCurveItem(bedrock_slice)
-            overburden = pg.FillBetweenItem(top, bottom, brush=(66, 134, 244, 100))
-
-            self.slice_plot.clear()
-            self.slice_plot.addItem(overburden)
-
-            top = pg.PlotCurveItem(bedrock_slice, pen=None)
-            top.setFillLevel(0.0)
-            top.setBrush(57, 239, 47, 100)
-            self.slice_plot.addItem(top)
-
-            self.imv2.setImage(slice)
-
-            # self.roi.sigRegionChanged.connect(update_cross_section)
-
     def cmapToHex(self):
-
-        if self.colormap == "plasma":
-            cmap = cm.plasma
-
-        elif self.colormap == 'inferno':
-            cmap = cm.inferno
-
-        elif self.colormap == 'magma':
-            cmap = cm.magma
-
-        elif self.colormap == 'viridis':
-            cmap = cm.viridis
-
-        else:
-            cmap = cm.get_cmap(self.colormap, 10)  # PiYG
 
         rgb = []
 
         try:
+            cmap = cm.get_cmap(self.colormap, 10)
             for i in range(cmap.N):
                 rgb.append(cmap(i)[:3])  # will return rgba, we take only first 3 so we get rgb
-                # print(matplotlib.colors.rgb2hex(rgb))
-        except ValueError:
-            for i in range(10):
-                rgb.append(cmap(i*25)[:3])
 
-        self.jet = pg.ColorMap(pos=np.linspace(0.0, 1.0, 9), color=rgb)
+        except ValueError:
+            norm = matplotlib.colors.Normalize(vmin=0, vmax=10)
+            cmap = cm.get_cmap(self.colormap)
+
+            for i in range(0, 10):
+                k = matplotlib.colors.colorConverter.to_rgb(cmap(norm(i)))
+                rgb.append(k)
+
+        self.colorMap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 10), color=rgb)
 
     def jet_color_map(self):
         colorMap = [
@@ -324,7 +299,7 @@ class contour_plot(QtGui.QDialog):
             (255, 255, 255)
         ]
 
-        self.jet = pg.ColorMap(pos=np.linspace(0.0, 1.0, 7), color=colorMap)
+        self.colorMap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 7), color=colorMap)
 
 
 class Surface_plot(QtGui.QDialog):
@@ -403,9 +378,14 @@ class Surface_plot(QtGui.QDialog):
 
     def generate_colormap(self):
 
-        cmap = cm.get_cmap(str(self.colorMap), 31)
-        norm = Normalize(vmin=self.z.min(), vmax=self.z.max())
-        self.colors = cmap(norm(self.vertices[:, -1]), bytes=True)/255.0
+        try:
+            cmap = cm.get_cmap(str(self.colorMap), 32)
+            norm = Normalize(vmin=self.z.min(), vmax=self.z.max())
+            self.colors = cmap(norm(self.vertices[:, -1]), bytes=True) / 255.0
+        except ValueError:
+            cmap = cm.get_cmap(str(self.colorMap))
+            norm = Normalize(vmin=self.z.min(), vmax=self.z.max())
+            self.colors = cmap(norm(self.vertices[:, -1]), bytes=True) / 255.0
 
     def build_triangular_mesh(self, xDim, yDim, zMin, vertices, faces, colors, verticalExag):
 
