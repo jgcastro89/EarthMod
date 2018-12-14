@@ -1,5 +1,5 @@
 # EarthMod
-Visualization tool for 3D datasets where the goal is to produce and analyze heatmaps or contour maps in 2D and 3D i.e geophysical data (gravity, magnetics, etc), topographic data, geospacial data. 
+A visualization tool for 3D datasets where the goal is to produce and analyze heatmaps or contour maps in 2D and 3D i.e geophysical data (gravity, magnetics, etc), topographic data, geospacial data. 
 The tool can take input files with 3 columns (x,y,z) in text format or csv. Attached are 3 sample data sets that illustrate how input files should look like. 
 
 To start using the dashboard type "python EarthMod_gui.py" into a terminal window.
