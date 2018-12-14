@@ -157,7 +157,7 @@ class contour_plot(QtGui.QDialog):
 
         items = ("linear", "power", "gaussian", "spherical", "exponential")
 
-        item, ok = QtGui.QInputDialog.getItem(self, "Kriging", "Variogram", items, 0, False)
+        item, ok = QtGui.QInputDialog.getItem(self, "Kriging", "Select a Model", items, 0, False)
 
         data = np.vstack((x, y))
         data = np.vstack((data, z)).T
