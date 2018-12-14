@@ -32,6 +32,11 @@ class contour_plot(QtGui.QDialog):
         self.heat_toolbar = NavigationToolbar(self.heat_canvas, self)
         self.heat_figure.set_facecolor('ghostwhite')
 
+        self.variogram_figure = Figure()
+        self.variogram_canvas = FigureCanvas(self.variogram_figure)
+        self.variogram_toolbar = NavigationToolbar(self.variogram_canvas, self)
+        self.variogram_figure.set_facecolor('ghostwhite')
+
         self.contour_ax = None
         self.colormap = None
         self.X = None
@@ -146,7 +151,7 @@ class contour_plot(QtGui.QDialog):
 
         self.Z, ss = OK.execute('grid', gridx, gridy)
 
-        #OK.display_variogram_model()
+        self._display_variogram_model(OK)
 
     def universal_kriging(self, x, y, z, xDim, yDim):
 
@@ -165,7 +170,7 @@ class contour_plot(QtGui.QDialog):
 
         self.Z, ss = UK.execute('grid', gridx, gridy)
 
-        #UK.display_variogram_model()
+        self._display_variogram_model(UK)
 
     def _convex_hull(self, x, y, z, xDim, yDim):
 
@@ -255,6 +260,30 @@ class contour_plot(QtGui.QDialog):
         ax.grid(True, color='ghostwhite', linestyle='-', linewidth=0.3)
 
         self.heat_canvas.draw()
+
+    def _display_variogram_model(self, model):
+        """Displays variogram model with the actual binned data"""
+        self.variogram_figure.clear()
+
+        # create an axis
+        ax = self.variogram_figure.add_subplot(111, axisbg='lightsteelblue')
+
+        # discards the old graph
+        ax.clear()
+
+        ax.plot(model.lags, model.semivariance, 'r*')
+        ax.plot(model.lags, model.variogram_function(model.variogram_model_parameters, model.lags), 'k-')
+        ax.spines['top'].set_color('ghostwhite')
+        ax.spines['right'].set_color('ghostwhite')
+        ax.spines['bottom'].set_color('ghostwhite')
+        ax.spines['left'].set_color('ghostwhite')
+        ax.tick_params(color='white')
+        ax.grid(True, color='ghostwhite', linestyle='-', linewidth=0.3)
+        ax.set_xlabel("Lag")
+        ax.set_ylabel("Variance")
+        ax.set_title("Variogram Model")
+
+        self.variogram_canvas.draw()
 
     def heat_plot(self, Z):
 

@@ -72,11 +72,14 @@ class UI(QtGui.QMainWindow):
         self.data_df_dock = Dock("Data Dataframe", size=(1, 2))
         self.contour_dock = Dock("Contour Map", size=(2,8))
         self.heat_dock = Dock("Heat Map", size=(2,8))
+        self.variogram_dock = Dock("Variogram Model", size=(2,8))
 
         self._2D_maps_ui.addDock(self.menu_dock, 'left')
         self._2D_maps_ui.addDock(self.data_df_dock, 'right', self.menu_dock)
-        self._2D_maps_ui.addDock(self.heat_dock, 'bottom', self.menu_dock)
+        self._2D_maps_ui.addDock(self.variogram_dock, 'bottom', self.menu_dock)
+        self._2D_maps_ui.addDock(self.heat_dock, 'above', self.variogram_dock)
         self._2D_maps_ui.addDock(self.contour_dock, 'bottom', self.data_df_dock)
+
 
         self._2D_maps_tab_placement.addWidget(self._2D_maps_ui)
 
@@ -115,6 +118,9 @@ class UI(QtGui.QMainWindow):
 
         self.heat_dock.addWidget(self.EMC.Contour_Map.heat_canvas)
         self.heat_dock.addWidget(self.EMC.Contour_Map.heat_toolbar)
+
+        self.variogram_dock.addWidget(self.EMC.Contour_Map.variogram_canvas)
+        self.variogram_dock.addWidget(self.EMC.Contour_Map.variogram_toolbar)
 
         self.map_img_dock.addWidget(self.EMC.Contour_Map.heat_img)
 

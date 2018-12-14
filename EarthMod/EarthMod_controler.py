@@ -62,7 +62,7 @@ class Logic(QtGui.QMainWindow):
         Modifications are needed for when a user clicks cancel instead of ok.
         :return:
         """
-        num, ok = QtGui.QInputDialog.getInt(self, "Set Grid Size", "Enter an Integer", 100, 100)
+        num, ok = QtGui.QInputDialog.getInt(self, "Set Grid Size", "Enter an Integer", 300, 100)
         input = str(num)
 
         if num > 99 and ok:
@@ -79,7 +79,7 @@ class Logic(QtGui.QMainWindow):
         Modifications are needed for when a user clicks cancel.
         :return:
         """
-        num, ok = QtGui.QInputDialog.getInt(self, "Set Grid Size", "Enter an Integer", 100, 100)
+        num, ok = QtGui.QInputDialog.getInt(self, "Set Grid Size", "Enter an Integer", 300, 100)
         input = str(num)
 
         if num > 99 and ok:
@@ -136,8 +136,7 @@ class Logic(QtGui.QMainWindow):
         # Contour_Map.contour_ax is set to None in order to in order to generate a new extrapolation grid.
         self.Contour_Map.contour_ax = None
 
-        items = ("Ordinary-Kriging", "Universal-Kriging", "Rbf-linear", "Rbf-cubic", "Rbf-gaussian", "Rbf-inverse",
-                 "Rbf-quintic", "Rbf-thin_plate", "Rbf-multiquadric")
+        items = ("Ordinary-Kriging", "Universal-Kriging", "Rbf-linear")
 
         item, ok = QtGui.QInputDialog.getItem(self, "RBF/Kriging", "Extrapolation", items, 0, False)
 
@@ -212,7 +211,7 @@ class Logic(QtGui.QMainWindow):
 
         items = (
             "YlGnBu_r", "Purples_r", "Blues_r", "Greens_r", "PuRd_r", "RdPu_r", "YlGn_r", "BuPu_r", "RdBu_r",
-            "ocean", "gist_earth", "terrain", "seismic", "colorMap", "spectral",
+            "ocean", "gist_earth", "terrain", "seismic", "jet", "spectral",
             "viridis", "plasma", "inferno", "magma")
         item, ok = QtGui.QInputDialog.getItem(self, "Select a Colormap Option", "Colormaps", items, 0, False)
 
