@@ -19,3 +19,12 @@ The following is a step by step procedure on how to install these packages.
 4) install sklearn through anaconda (https://anaconda.org/anaconda/scikit-learn)
 5) install pykrige through anaconda or pip (https://pykrige.readthedocs.io/en/latest/overview.html, https://anaconda.org/conda-forge/pykrige)
 6) matplotlib, numpy, scipy, and pandas should already be installed with anaconda. You can check by typing "conda list" into a terminal window. 
+
+Should you run into problems after isntalling the requered packages, here are the following are the exact versions of said packages.
+PyKrige                   1.3.2
+pyqtgraph                 0.10.0  
+pandas                    0.23.1
+numpy                     1.15.4 
+scipy                     1.1.0
+scikit-learn              0.18.2
+matplotlib                1.5.1
