@@ -13,7 +13,7 @@ This tool requres the instalation of
   matplotlib
 These packages and their dependencies are best handeled by anaconda.
 The following is a step by step procedure on how to install these packages.
-1) install anaconda (https://www.anaconda.com/download/)
+1) install anaconda (2.7) (https://www.anaconda.com/download/)
 2) install pyqtgraph through anaconda (https://anaconda.org/anaconda/pyqtgraph)
 4) install sklearn through anaconda (https://anaconda.org/anaconda/scikit-learn)
 5) install pykrige through anaconda (https://pykrige.readthedocs.io/en/latest/overview.html, https://anaconda.org/conda-forge/pykrige)
