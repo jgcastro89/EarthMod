@@ -18,9 +18,9 @@ import matplotlib.tri as mtri
 import matplotlib
 
 
-class contour_plot(QtGui.QDialog):
+class contourPlot(QtGui.QDialog):
     def __init__(self, parent=None):
-        super(contour_plot, self).__init__(parent)
+        super(contourPlot, self).__init__(parent)
 
         self.contour_figure = Figure()
         self.contour_canvas = FigureCanvas(self.contour_figure)
@@ -62,11 +62,11 @@ class contour_plot(QtGui.QDialog):
         :param interp_type: when this variable is active, scipy's Rbf interplation will be used
         :param func: specifies an Rbf function or griddata function (if interp_type=None)
         :return: N/A
-        :calls: contour_plot, heat_map, heat_plot methods
+        :calls: contourPlot, heat_map, heat_plot methods
         """
 
         self.colormap = str(colormap)
-        self.cmapToHex()
+        self.cmapToRGB()
         func = str(func)
 
         if self.contour_ax is None:
@@ -131,14 +131,14 @@ class contour_plot(QtGui.QDialog):
                 self.Z = ma.array(self.Z, mask=np.isnan(self.Z))
 
         self.contour_plot(self.X, self.Y, self.Z, x, y)
-        self.heat_map(self.X, self.Y, self.Z, x, y, z)
+        self.heat_map(self.X, self.Y, self.Z, x, y)
         self.heat_plot(self.Z)
 
     def ordinary_kriging(self, x, y, z, xDim, yDim):
 
         items = ("linear", "power", "gaussian", "spherical", "exponential", "hole-effect")
 
-        item, ok = QtGui.QInputDialog.getItem(self, "Kriging", "Variogram", items, 0, False)
+        item, ok = QtGui.QInputDialog.getItem(self, "Kriging", "Select a Model", items, 0, False)
 
         data = np.vstack((x, y))
         data = np.vstack((data, z)).T
@@ -219,7 +219,7 @@ class contour_plot(QtGui.QDialog):
         # refresh canvas
         self.contour_canvas.draw()
 
-    def heat_map(self, X, Y, Z, x, y, z):
+    def heat_map(self, X, Y, Z, x, y):
         """
         modifies heat_figure (declared at init) and produces a heat map of the given x,y,z data
 
@@ -228,7 +228,6 @@ class contour_plot(QtGui.QDialog):
         :param Z: Z component of scipy griddata/Rbf interpolation
         :param x: data points in the x axis (longitude)
         :param y: data points in the y axis (latitude)
-        :param z: data points in the z axis (elevation/contamination etc.)
         :return: N/A
         """
         self.heat_figure.clear()
@@ -279,8 +278,8 @@ class contour_plot(QtGui.QDialog):
         ax.spines['left'].set_color('ghostwhite')
         ax.tick_params(color='white')
         ax.grid(True, color='ghostwhite', linestyle='-', linewidth=0.3)
-        ax.set_xlabel("Lag")
-        ax.set_ylabel("Variance")
+        ax.set_xlabel("Lag distance")
+        ax.set_ylabel("Semivariance")
         ax.set_title("Variogram Model")
 
         self.variogram_canvas.draw()
@@ -297,7 +296,11 @@ class contour_plot(QtGui.QDialog):
         north_arrow.setPos(15, 0)
         self.heat_img.addItem(north_arrow)
 
-    def cmapToHex(self):
+    def cmapToRGB(self):
+        """
+        extracts rgb values from matplotlib's colormaps to build pg.ColorMap object for pyqtgraph image item
+        :return:
+        """
 
         rgb = []
 
@@ -331,9 +334,9 @@ class contour_plot(QtGui.QDialog):
         self.colorMap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 7), color=colorMap)
 
 
-class Surface_plot(QtGui.QDialog):
+class surfacePlot(QtGui.QDialog):
     def __init__(self, parent=None):
-        super(Surface_plot, self).__init__(parent)
+        super(surfacePlot, self).__init__(parent)
 
         self.surface_view = gl.GLViewWidget()
         self.surface_plot = None
@@ -383,35 +386,58 @@ class Surface_plot(QtGui.QDialog):
         self.surface_view.addItem(self.xy_grid)
 
     def mesh_grid(self):
-
+        """
+        creates a new meshgrid using specified dimensions which will be used as vertices for a triangular mesh
+        :return:
+        """
         x, y = np.meshgrid(np.linspace(0, self.xDim, self.xDim), np.linspace(0, self.yDim, self.yDim))
 
         self.x = x.flatten()
         self.y = y.flatten()
 
     def triangulate_faces(self):
-
+        """
+        utelizes matplotlib's Triangulation function to generate a triangular mesh from vertices
+        :return:
+        """
         faces = mtri.Triangulation(self.x, self.y)
         self.faces = faces.triangles
 
     def processing_zValues(self, Z, zMin, verticalExag):
-
+        """
+        sets all Nan values in z axis to a min, gl mesh items can not handle Nan values
+        scales z values of surface plot by a specified integer (verticalExaggeration)
+        :param Z:
+        :param zMin:
+        :param verticalExag:
+        :return:
+        """
         z = Z.data
         z[np.isnan(z)] = zMin
         self.z = z.flatten()*verticalExag
 
     def generate_vertices(self):
-
+        """
+        stacks meshgrid into vertices of x,y,z in preparation to generate a triangular mesh
+        :return:
+        """
         vertices = np.vstack((self.x, self.y))
         self.vertices = np.vstack((vertices, self.z)).T
 
     def generate_colormap(self):
 
         try:
+            """
+            generate 32 contours for surface plot
+            """
             cmap = cm.get_cmap(str(self.colorMap), 32)
             norm = Normalize(vmin=self.z.min(), vmax=self.z.max())
             self.colors = cmap(norm(self.vertices[:, -1]), bytes=True) / 255.0
         except ValueError:
+            """
+            generate a 3D heat surface using matplotlib's
+            perceptual uniform sequential colormaps
+            """
             cmap = cm.get_cmap(str(self.colorMap))
             norm = Normalize(vmin=self.z.min(), vmax=self.z.max())
             self.colors = cmap(norm(self.vertices[:, -1]), bytes=True) / 255.0
@@ -431,15 +457,19 @@ class Surface_plot(QtGui.QDialog):
         self.surface_view.addItem(self.surface_plot)
 
     def clear_view(self):
+        """
+        remove the old surface plot
+        :return:
+        """
         try:
             self.surface_view.removeItem(self.surface_plot)
-        except:
+        except ValueError:
             pass
 
 
-class Surface_Mesh(QtGui.QDialog):
+class surfaceMesh(QtGui.QDialog):
     def __init__(self, parent=None):
-        super(Surface_Mesh, self).__init__(parent)
+        super(surfaceMesh, self).__init__(parent)
         """
         matplotlib impelementation of a trinagular mesh
         """
@@ -482,74 +512,9 @@ class Surface_Mesh(QtGui.QDialog):
         # refresh canvas
         self.mesh_canvas.draw()
 
-
-class Volume_Rendering():
-    def __init__(self):
-
-        self.xDim = None
-        self.yDim = None
-        self.zDim = None
-        self.bedrock = None
-        self.Volume = None
-
-        self.win = gl.GLViewWidget()
-        self.win.opts['distance'] = 300
-
-        xgrid = gl.GLGridItem()
-        zgrid = gl.GLGridItem()
-        xgrid.rotate(90, 0, 1, 0)
-
-        self.win.addItem(xgrid)
-        self.win.addItem(zgrid)
-
-        #self.Geo_Volume()
-        axis = gl.GLAxisItem()
-        self.win.addItem(axis)
-
-    def Geo_Volume(self, xDim, yDim, zDim, bedrock, z_min):
-
-        self.xDim = xDim
-        self.yDim = yDim
-        self.zDim = zDim
-        self.z_min = z_min
-        self.bedrock = bedrock.T
-
-        data = (self.xDim, self.yDim, self.zDim)
-        data = np.zeros(data)
-
-        self.Volume = np.empty(data.shape + (4,), dtype=np.ubyte)
-
-        voxelModel = gl.GLVolumeItem(self.Volume, smooth=True, sliceDensity=1)
-        voxelModel.translate(-(self.xDim / 2), -(self.yDim / 2), 0)
-        self.win.addItem(voxelModel)
-
-        self.clear_nan_value()
-
-        self.update_volumetric_model()
-
-        # return w, self.Volume
-
-    def clear_nan_value(self):
-
-        #self.bedrock = np.array(self.bedrock, dtype=float64)
-
-        self.bedrock[np.isnan(self.bedrock)] = 0
-        #self.bedrock[self.bedrock < 0] = 0
-
-    def update_volumetric_model(self):
-        for i in range(0, self.xDim):
-            n = 0
-            for j in range(0, self.yDim):
-                low = int(self.bedrock[i][j])
-
-                # Volume[i][j][0:high/7] = [57,239,47,1]
-                self.Volume[i][j][0:low /self.z_min] = [57, 239, 47, 100]
-                #self.Volume[0:40] = [255, 0, 0, 100]
-                self.Volume[i][j][low / self.z_min:self.zDim] = [0, 0, 255, 0]
-
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
 
-    main = contour_plot()
+    main = contourPlot()
     main.show()
     sys.exit(app.exec_())

@@ -2,27 +2,29 @@ import pandas as pd
 from pyqtgraph import QtGui
 
 from pandas_tableview_model import PandasModel
-from contour_map import contour_plot, Surface_plot, Volume_Rendering, Surface_Mesh
+from contour_map import contourPlot, surfacePlot, surfaceMesh
 
 
 class Logic(QtGui.QMainWindow):
     def __init__(self):
         super(Logic, self).__init__()
+        """
+        This Class acts as a controller between the GUI, and the Objects (maps, models, plots, views).
+        Instances of the objects being used by the GUI are initiated here.
+        """
 
-        self.Contour_Map = contour_plot()
-        self.Surface_Plot = Surface_plot()
-        self.Surface_Mesh = Surface_Mesh()
-        self.Volume_Rendering = Volume_Rendering()
+        self.Contour_Map = contourPlot()   # Instance of contourPlot class
+        self.Surface_Plot = surfacePlot()  # Instance of surfacePlot class
 
-        self.pandas_tableview = QtGui.QTableView()
+        self.pandasTableView = QtGui.QTableView()
 
         # variables for 2D maps
-        self.x_dim = 100
-        self.y_dim = 100
-        self.z_dim = self.x_dim/2
-        self.xyz_file_name = None
-        self.pandas_dataframe = None
-        self.pandas_model = None
+        self.xDim = 100
+        self.yDim = 100
+        self.zDim = self.xDim / 2
+        self.xyzFileName = None
+        self.pandasDataframe = None
+        self.pandasModel = None
 
         # buttons for menu dock
         self.set_x_grid_size = QtGui.QPushButton('Set X Grid Size')
@@ -42,20 +44,6 @@ class Logic(QtGui.QMainWindow):
         self.interpolation_mapButton.clicked.connect(self.build_interpolation_map)
         self.select_colormapButton.clicked.connect(self.select_colormap)
 
-    def init_menu_buttons(self, dock_widget):
-        """
-        This method inserts menu buttons into the specified dock widget (input).
-        :param dock_widget:
-        :return:
-        """
-
-        dock_widget.addWidget(self.set_x_grid_size, row=0, col=0, colspan=2)
-        dock_widget.addWidget(self.set_y_grid_size, row=0, col=2, colspan=2)
-        dock_widget.addWidget(self.open_fileButton, row=1, col=0, colspan=4)
-        dock_widget.addWidget(self.extrapolation_mapButton, row=2, col=0, colspan=2)
-        dock_widget.addWidget(self.interpolation_mapButton, row=2, col=2, colspan=2)
-        dock_widget.addWidget(self.select_colormapButton, row=3, col=0, colspan=4)
-
     def get_int_attr_X(self):
         """
         This method assigns an integer value for the x-axis grid size. The value is stored in set_x_grid_size.
@@ -67,7 +55,7 @@ class Logic(QtGui.QMainWindow):
 
         if num > 99 and ok:
             self.set_x_grid_size.setText(input)
-            self.x_dim = num
+            self.xDim = num
         else:
             self.get_int_attr_X()
 
@@ -84,7 +72,7 @@ class Logic(QtGui.QMainWindow):
 
         if num > 99 and ok:
             self.set_y_grid_size.setText(input)
-            self.y_dim = num
+            self.yDim = num
         else:
             self.get_int_attr_Y()
 
@@ -101,7 +89,7 @@ class Logic(QtGui.QMainWindow):
 
         if num < 201 and ok:
             self.set_z_grid_size.setText(input)
-            self.Surface_Plot.update_vertical_exaggeration(self.Contour_Map.Z, self.pandas_dataframe[2].min(),
+            self.Surface_Plot.update_vertical_exaggeration(self.Contour_Map.Z, self.pandasDataframe[2].min(),
                                                            int(input))
         else:
             self.get_int_attr_Z()
@@ -112,7 +100,7 @@ class Logic(QtGui.QMainWindow):
         :return:
         """
         self.Contour_Map.contour_ax = None
-        self.xyz_file_name = QtGui.QFileDialog.getOpenFileName(self, 'OpenFile')
+        self.xyzFileName = QtGui.QFileDialog.getOpenFileName(self, 'OpenFile')
         self.build_pandas_dataframe()
 
     def build_pandas_dataframe(self):
@@ -120,10 +108,10 @@ class Logic(QtGui.QMainWindow):
         Populate a pandas dataframe with a selected CSV file opened by the user.
         :return:
         """
-        if 'csv' in self.xyz_file_name:
-            self.pandas_dataframe = pd.read_csv(str(self.xyz_file_name), header=None)
+        if 'csv' in self.xyzFileName:
+            self.pandasDataframe = pd.read_csv(str(self.xyzFileName), header=None)
         else:
-            self.pandas_dataframe = pd.read_table(str(self.xyz_file_name), delim_whitespace=True, header=None)
+            self.pandasDataframe = pd.read_table(str(self.xyzFileName), delim_whitespace=True, header=None)
         self.build_pandas_model()
 
     def build_extrapolation_map(self):
@@ -144,23 +132,23 @@ class Logic(QtGui.QMainWindow):
         if 'Rbf' in str(item):
             item = str(item).split('-')
             item = item[1]
-            self.Contour_Map.build_2D_grid(self.pandas_dataframe[0], self.pandas_dataframe[1], self.pandas_dataframe[2],
-                                           self.x_dim, self.y_dim,
+            self.Contour_Map.build_2D_grid(self.pandasDataframe[0], self.pandasDataframe[1], self.pandasDataframe[2],
+                                           self.xDim, self.yDim,
                                            interp_type='Rbf',
                                            func=item)
         else:
             item = str(item).split('-')
             item = item[0]
-            self.Contour_Map.build_2D_grid(self.pandas_dataframe[0], self.pandas_dataframe[1], self.pandas_dataframe[2],
-                                           self.x_dim, self.y_dim,
+            self.Contour_Map.build_2D_grid(self.pandasDataframe[0], self.pandasDataframe[1], self.pandasDataframe[2],
+                                           self.xDim, self.yDim,
                                            interp_type=None,
                                            func=item)
 
-        #self.Surface_Mesh.init_tiangular_mesh(self.Contour_Map.X, self.Contour_Map.Y, self.Contour_Map.Z,
-        #                                      self.pandas_dataframe[2].min())
+        #self.surfaceMesh.init_tiangular_mesh(self.Contour_Map.X, self.Contour_Map.Y, self.Contour_Map.Z,
+        #                                      self.pandasDataframe[2].min())
 
-        self.Surface_Plot.init_surfaceMesh(self.Contour_Map.Z, self.x_dim, self.y_dim,
-                                           self.pandas_dataframe[2].min())
+        self.Surface_Plot.init_surfaceMesh(self.Contour_Map.Z, self.xDim, self.yDim,
+                                           self.pandasDataframe[2].min())
 
     def build_interpolation_map(self):
         """
@@ -178,8 +166,8 @@ class Logic(QtGui.QMainWindow):
         if 'Rbf' in str(item):
             item = str(item).split('-')
             item = item[1]
-            self.Contour_Map.build_2D_grid(self.pandas_dataframe[0], self.pandas_dataframe[1], self.pandas_dataframe[2],
-                                           self.x_dim, self.y_dim,
+            self.Contour_Map.build_2D_grid(self.pandasDataframe[0], self.pandasDataframe[1], self.pandasDataframe[2],
+                                           self.xDim, self.yDim,
                                            interp_type='Rbf',
                                            func=item)
         else:
@@ -188,18 +176,18 @@ class Logic(QtGui.QMainWindow):
                 item = item[0]
             except IndexError:
                 pass
-            self.Contour_Map.build_2D_grid(self.pandas_dataframe[0], self.pandas_dataframe[1], self.pandas_dataframe[2],
-                                           self.x_dim, self.y_dim,
+            self.Contour_Map.build_2D_grid(self.pandasDataframe[0], self.pandasDataframe[1], self.pandasDataframe[2],
+                                           self.xDim, self.yDim,
                                            interp_type=None,
                                            func=item)
 
-        self.Surface_Plot.init_surfaceMesh(self.Contour_Map.Z, self.x_dim, self.y_dim,
-                                           self.pandas_dataframe[2].min())
+        self.Surface_Plot.init_surfaceMesh(self.Contour_Map.Z, self.xDim, self.yDim,
+                                           self.pandasDataframe[2].min())
 
     def build_pandas_model(self):
-        Pandas_Model_Instance = PandasModel(self.pandas_dataframe)
-        self.pandas_tableview.setModel(Pandas_Model_Instance)
-        self.pandas_tableview.resizeColumnsToContents()
+        Pandas_Model_Instance = PandasModel(self.pandasDataframe)
+        self.pandasTableView.setModel(Pandas_Model_Instance)
+        self.pandasTableView.resizeColumnsToContents()
 
     def select_colormap(self):
         """
@@ -213,9 +201,10 @@ class Logic(QtGui.QMainWindow):
             "YlGnBu_r", "Purples_r", "Blues_r", "Greens_r", "PuRd_r", "RdPu_r", "YlGn_r", "BuPu_r", "RdBu_r",
             "ocean", "gist_earth", "terrain", "seismic", "jet", "spectral",
             "viridis", "plasma", "inferno", "magma")
+
         item, ok = QtGui.QInputDialog.getItem(self, "Select a Colormap Option", "Colormaps", items, 0, False)
 
-        self.Contour_Map.build_2D_grid(self.pandas_dataframe[0], self.pandas_dataframe[1], self.pandas_dataframe[2],
-                                       self.x_dim, self.y_dim, item)
+        self.Contour_Map.build_2D_grid(self.pandasDataframe[0], self.pandasDataframe[1], self.pandasDataframe[2],
+                                       self.xDim, self.yDim, item)
 
         self.Surface_Plot.update_colormap(item)

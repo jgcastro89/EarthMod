@@ -16,6 +16,7 @@ class UI(QtGui.QMainWindow):
         EMC contains all objects (maps, views, plots). Objects are first imported to EarthMod_controller then
         EarthMod_controler is imported here.
         """
+        # instance of eEarthMod_controller
         self.EMC = Logic()
 
         self._2D_maps_ui = DockArea()
@@ -29,6 +30,7 @@ class UI(QtGui.QMainWindow):
         self.data_df_dock = None
         self.contour_dock = None
         self.heat_dock = None
+        self.variogram_dock = None
 
         self._3D_settings_dock = None
         self.map_img_dock = None
@@ -53,7 +55,7 @@ class UI(QtGui.QMainWindow):
         self.show()
 
     def set_up_tabs(self):
-        """Setting up tabs for UI"""
+        """Initiate two tabs for UI"""
         _2D_maps_tab = QtGui.QWidget()
         _3D_maps_tab = QtGui.QWidget()
 
@@ -65,14 +67,14 @@ class UI(QtGui.QMainWindow):
 
     def build_2D_maps_docks(self):
         """
-        This method handles adding docks to the 2D maps tab (_2D_maps_ui)
+        This method handles the addition of docks to the 2D maps tab (_2D_maps_ui)
         :return:
         """
         self.menu_dock = Dock("Menu", size=(1, 2))
         self.data_df_dock = Dock("Data Dataframe", size=(1, 2))
-        self.contour_dock = Dock("Contour Map", size=(2,8))
-        self.heat_dock = Dock("Heat Map", size=(2,8))
-        self.variogram_dock = Dock("Variogram Model", size=(2,8))
+        self.contour_dock = Dock("Contour Map", size=(2, 8))
+        self.heat_dock = Dock("Heat Map", size=(2, 8))
+        self.variogram_dock = Dock("Variogram Model", size=(2, 8))
 
         self._2D_maps_ui.addDock(self.menu_dock, 'left')
         self._2D_maps_ui.addDock(self.data_df_dock, 'right', self.menu_dock)
@@ -80,16 +82,15 @@ class UI(QtGui.QMainWindow):
         self._2D_maps_ui.addDock(self.heat_dock, 'above', self.variogram_dock)
         self._2D_maps_ui.addDock(self.contour_dock, 'bottom', self.data_df_dock)
 
-
         self._2D_maps_tab_placement.addWidget(self._2D_maps_ui)
 
     def build_3D_map_docks(self):
         """
-        This method is not being used. This method will be utilized to add docks to the 3D maps tab (_3D_maps_ui)
+        This method handles the addition of docks to the 3D maps tab (_3D_maps_ui)
         :return:
         """
-        self.map_img_dock = Dock("2D Map Img", size=(2,6))
-        self._3D_surface_dock = Dock("3D Map", size=(2,6))
+        self.map_img_dock = Dock("2D Map Img", size=(2, 6))
+        self._3D_surface_dock = Dock("3D Map", size=(2, 6))
 
         self._3D_maps_ui.addDock(self._3D_surface_dock, 'left')
         self._3D_maps_ui.addDock(self.map_img_dock, 'right', self._3D_surface_dock)
@@ -98,37 +99,37 @@ class UI(QtGui.QMainWindow):
 
     def add_buttons_to_menu(self):
         """
-        The menu_dock is passed to a method in EMC (EarthMod_controller) to add the menu buttons to the dock.
-        The menu buttons, their corresponding logic, and singnal handling are created and handled in EMC.
+        This method inserts menu buttons into the menu_dock for _2D_maps_ui.
         :return:
         """
-        self.EMC.init_menu_buttons(self.menu_dock)
+
+        self.menu_dock.addWidget(self.EMC.set_x_grid_size, row=0, col=0, colspan=2)
+        self.menu_dock.addWidget(self.EMC.set_y_grid_size, row=0, col=2, colspan=2)
+        self.menu_dock.addWidget(self.EMC.open_fileButton, row=1, col=0, colspan=4)
+        self.menu_dock.addWidget(self.EMC.extrapolation_mapButton, row=2, col=0, colspan=2)
+        self.menu_dock.addWidget(self.EMC.interpolation_mapButton, row=2, col=2, colspan=2)
+        self.menu_dock.addWidget(self.EMC.select_colormapButton, row=3, col=0, colspan=4)
 
     def add_objects_to_docks(self):
         """
-        EMC (EarthMod_controller) has created instances of our objects (maps/vews/models/plots) from contour_map.py
+        EMC (EarthMod_controller) has created instances of our objects (maps/views/models/plots) from contour_map.py
         and manages their logic. Here we are calling the instances of those objects that have already been created
         and placing them in their appropriate docks.
         :return:
         """
-        self.data_df_dock.addWidget(self.EMC.pandas_tableview)
-
+        # 2D Maps Tab
+        self.data_df_dock.addWidget(self.EMC.pandasTableView)
         self.contour_dock.addWidget(self.EMC.Contour_Map.contour_canvas)
         self.contour_dock.addWidget(self.EMC.Contour_Map.contour_toolbar)
-
         self.heat_dock.addWidget(self.EMC.Contour_Map.heat_canvas)
         self.heat_dock.addWidget(self.EMC.Contour_Map.heat_toolbar)
-
         self.variogram_dock.addWidget(self.EMC.Contour_Map.variogram_canvas)
         self.variogram_dock.addWidget(self.EMC.Contour_Map.variogram_toolbar)
 
+        # 3D Maps Tab
         self.map_img_dock.addWidget(self.EMC.Contour_Map.heat_img)
-
         self._3D_surface_dock.addWidget(self.EMC.Surface_Plot.surface_view)
         self._3D_surface_dock.addWidget(self.EMC.set_z_grid_size)
-
-        # self._3D_surface_dock.addWidget(self.EMC.Surface_Mesh.mesh_canvas)
-        # self._3D_surface_dock.addWidget(self.EMC.Volume_Rendering.win)
 
     def center(self):
         """
